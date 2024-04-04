@@ -68,7 +68,7 @@ def get_personal_stat(telegram_id, connection=None) -> list[list]:
 @decorator_add_connection
 def get_random_question(telegram_id, connection=None) -> tuple[int, str]:
     """
-    получить случайный, неотвененный вопрос из бд
+    получить случайный, неотвеченный вопрос из бд
 
     return: tuple[int, str]
     int -- question.id
