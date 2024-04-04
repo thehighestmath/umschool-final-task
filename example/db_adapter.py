@@ -76,6 +76,7 @@ def get_random_question(telegram_id, connection=None) -> tuple[int, str]:
     """
     return (0, "example")
 
+
 @decorator_add_connection
 def get_choices_by_question_id(question_id: int, connection=None) -> list[str]:
     """
