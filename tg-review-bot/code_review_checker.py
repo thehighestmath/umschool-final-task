@@ -58,6 +58,6 @@ class CodeReviewChecker:
                 code = self.load_code(file_path)
                 self.check_concatenation_in_loop(code, file_path)
                 self.check_connection_duplication(code, file_path)
-                self.check_f_strings(code, file_path)
+                #self.check_f_strings(code, file_path)
                 self.check_backslash_continuations(code, file_path)
         return self.messages
