@@ -52,6 +52,7 @@ def check_project(message):
         telebot.formatting.format_text(
             telebot.formatting.hbold("Проверка закончена."),
             "Если есть возражения -- писать @the_real_math / @kiril_python",
+            "Рекомендую почитать этот документ даже если бот НЕ нашёл замечаний",
             telebot.formatting.hitalic("beta. v0.1"),
             "",
             telebot.formatting.hcode(verdict),
