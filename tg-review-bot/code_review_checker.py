@@ -50,9 +50,3 @@ class CodeReviewChecker:
                 self.check_f_strings(code, file_path)
                 self.check_backslash_continuations(code, file_path)
         return self.messages
-
-if __name__ == "__main__":
-    project_folder = './f'
-
-    m = CodeReviewChecker(project_folder).run_checks()
-    print(m)
