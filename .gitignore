@@ -1,1 +1,4 @@
 __pycache__
+*.log
+venv/
+tg-review-bot/config.py
