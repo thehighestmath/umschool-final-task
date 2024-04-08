@@ -59,6 +59,15 @@ def check_project(message):
         ),
         parse_mode="HTML",
     )
+    with open('pep8-report.out') as fp:
+        report = fp.read()
+    bot.send_message(
+        chat_id,
+        telebot.formatting.format_text(
+            telebot.formatting.hcode(report),
+        ),
+        parse_mode="HTML",
+    )
     logging.info(
         f"Проверка проекта {project_url} завершена. Результат отправлен пользователю. {verdict}"
     )

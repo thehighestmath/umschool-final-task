@@ -2,3 +2,5 @@ __pycache__
 *.log
 venv/
 tg-review-bot/config.py
+pep8-report.out
+sample-repo/

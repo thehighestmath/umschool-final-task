@@ -1,6 +1,10 @@
 import os
 import glob
 
+from pylint.lint import Run
+from pylint.reporters.text import TextReporter
+
+
 
 class CodeReviewChecker:
     def __init__(self, folder_path):
@@ -35,13 +39,6 @@ class CodeReviewChecker:
                     )
                     break
 
-    def check_f_strings(self, code, filename):
-        for i, line in enumerate(code):
-            if "%" in line:
-                self.messages.append(
-                    f"Обнаружено использование старого форматирования строк в строке {i+1} файла {filename}: {line.strip()}"
-                )
-
     def check_backslash_continuations(self, code, filename):
         for i, line in enumerate(code):
             if "\\" in line and line.strip().endswith("\\"):
@@ -49,15 +46,26 @@ class CodeReviewChecker:
                     f"Обнаружены продолжения строк с использованием обратного слэша в строке {i+1} файла {filename}: {line.strip()}"
                 )
 
+    def check_pep8(self):
+        with open("pep8-report.out", "w") as f:
+            reporter = TextReporter(f)
+            Run([self.folder_path], reporter=reporter, do_exit=False)
+
     def run_checks(self):
+        self.check_pep8()
+
         file_list = glob.glob(os.path.join(self.folder_path, "**/*.py"), recursive=True)
 
-        # Выводим список файлов
         for file_path in file_list:
             if file_path.endswith(".py"):
                 code = self.load_code(file_path)
                 self.check_concatenation_in_loop(code, file_path)
                 self.check_connection_duplication(code, file_path)
-                #self.check_f_strings(code, file_path)
                 self.check_backslash_continuations(code, file_path)
         return self.messages
+
+
+if __name__ == '__main__':
+    checker = CodeReviewChecker('sample-repo')
+    checker.run_checks()
+    print(*checker.run_checks(), sep='\n')
