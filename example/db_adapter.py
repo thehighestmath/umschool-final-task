@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from .handlers.custom_types import Question
+
 
 def get_connection_to_data_base():
     pass
@@ -26,7 +28,8 @@ def create_tables_from_db(connection=None):
 @decorator_add_connection
 def delete_question_by_id_db(question_id: int, connection=None):
     """
-    удалить вопрос, варианты ответа, а также всю статистику связанную с ним из бд
+    удалить вопрос, варианты ответа,
+    а также всю статистику связанную с ним из бд
     """
     pass
 
@@ -58,7 +61,7 @@ def get_all_stat(connection=None) -> list[list]:
 
 
 @decorator_add_connection
-def get_personal_stat(telegram_id, connection=None) -> list[list]:
+def get_personal_stat(telegram_id: int, connection=None) -> list[list]:
     """
     получить личную статистику пользователя
     """
@@ -66,15 +69,13 @@ def get_personal_stat(telegram_id, connection=None) -> list[list]:
 
 
 @decorator_add_connection
-def get_random_question(telegram_id, connection=None) -> tuple[int, str]:
+def get_random_question(telegram_id: int, connection=None) -> Question:
     """
     получить случайный, неотвеченный вопрос из бд
 
-    return: tuple[int, str]
-    int -- question.id
-    str -- question.text
+    return: Question
     """
-    return (0, "example")
+    return Question(id=0, text="")
 
 
 @decorator_add_connection
@@ -86,7 +87,7 @@ def get_choices_by_question_id(question_id: int, connection=None) -> list[str]:
 
 
 @decorator_add_connection
-def add_user_vote_db(choice_id, telegram_id, connection=None):
+def add_user_vote_db(choice_id: int, telegram_id: int, connection=None):
     """
     добавить голос пользователя выбранному варианту ответа
     """

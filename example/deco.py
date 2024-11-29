@@ -5,6 +5,7 @@ def g(func):
         print('g2')
     return wrapper
 
+
 def h(func):
     def wrapper():
         print('h1')
@@ -13,9 +14,12 @@ def h(func):
     return wrapper
 
 # @h
-# @g 
+# @g
+
+
 def f():
     print('hello')
+
 
 f = h(g(f))
 
