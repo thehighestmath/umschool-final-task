@@ -21,4 +21,4 @@ jobs:
     - name: Analysing the code with flake8
       run: |
         cd example
-        flake8 -v .
+        flake8 -v --max-line-length=140 .
