@@ -1,9 +1,10 @@
 from datetime import datetime
 
 import sqlalchemy
+from sqlalchemy import select, update
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
-from handlers import custom_types
+# from handlers import custom_types
 
 USERNAME = 'umschooluser'
 PASSWORD = 'umschoolpswd'
@@ -129,13 +130,28 @@ def get_personal_stat(telegram_id: int, session: Session) -> list[list]:
 
 
 @decorator_add_session
-def get_random_question(telegram_id: int, session: Session) -> custom_types.Question:
+def get_random_question(telegram_id: int, session: Session):
     """
     получить случайный, неотвеченный вопрос из бд
 
-    return: Question
+    return: tuple
     """
-    return custom_types.Question(id=0, text="")
+    available_ids = set()
+    answered_ids = set()
+    text = ""
+    id_ = -1
+    with session.begin():
+        stmt = select(Question.id).where(1==1)
+        for id_ in session.scalars(stmt):
+            available_ids.add(id_)
+        stmt = select(UserStat).where(UserStat.tg_user_id == telegram_id)
+        for id_ in session.scalars(stmt):
+            answered_ids.add(id_)
+        id_ = list(available_ids - answered_ids)[0]
+        stmt = select(Question.question_text).where(Question.id == id_)
+        for txt in session.scalars(stmt):
+            text = txt
+    return (id_, text)
 
 
 @decorator_add_session
@@ -143,7 +159,12 @@ def get_choices_by_question_id(question_id: int, session: Session) -> list[str]:
     """
     получить ответы по заданному question_id
     """
-    return []
+    choice_text = []
+    with session.begin():
+        stmt = select(Choice).where(Choice.question_id == question_id)
+        for choice in session.scalars(stmt):
+            choice_text.append(choice.choice_text)
+    return choice_text
 
 
 @decorator_add_session
@@ -151,10 +172,29 @@ def add_user_vote_db(choice_id: int, telegram_id: int, session: Session):
     """
     добавить голос пользователя выбранному варианту ответа
     """
-    pass
+    with session.begin():
+        stmt = select(Choice).where(Choice.id == choice_id)
+        result = session.execute(stmt)
+        votes = 0
+        for choice in result.scalars():
+            print(choice)
+            votes = choice.votes
+
+        new_votes = votes + 1
+        stmt = (
+            update(Choice).
+            where(Choice.id == choice_id).
+            values(votes=new_votes)
+        )
+        print(stmt, new_votes, choice_id)
+        session.execute(stmt)
+        session.commit()
+
 
 
 if __name__ == "__main__":
-    create_tables_in_db()
-    add_question_to_db("test-question", datetime.now())
-    add_choice_to_db("test-choice", 20)
+    print(get_random_question(1))
+    print(get_choices_by_question_id(1))
+    # create_tables_in_db()
+    # add_question_to_db("test-question", datetime.now())
+    # add_choice_to_db("test-choice", 20)

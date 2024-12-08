@@ -8,7 +8,7 @@ from handlers import register_handlers
 from init_bot import create_bot
 
 
-telebot.logger.setLevel(logging.DEBUG)  # Outputs messages to console.
+# telebot.logger.setLevel(logging.DEBUG)  # Outputs messages to console.
 
 if __name__ == "__main__":
     create_tables_in_db()
