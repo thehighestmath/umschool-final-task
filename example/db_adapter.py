@@ -1,10 +1,10 @@
 from datetime import datetime
 
 import sqlalchemy
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
+from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 
-# from handlers import custom_types
 
 USERNAME = 'umschooluser'
 PASSWORD = 'umschoolpswd'
@@ -110,7 +110,14 @@ def delete_question_by_id_db(question_id: int, session: Session):
     удалить вопрос, варианты ответа,
     а также всю статистику связанную с ним из бд
     """
-    pass
+    with session.begin():
+        stmt = delete(UserStat).where(UserStat.question_id == question_id)
+        session.execute(stmt)
+        stmt = delete(Choice).where(Choice.question_id == question_id)
+        session.execute(stmt)
+        stmt = delete(Question).where(Question.id == question_id)
+        session.execute(stmt)
+        session.commit()
 
 
 @decorator_add_session
@@ -118,7 +125,17 @@ def get_all_stat(session: Session) -> list[list]:
     """
     получить статистику пользователей
     """
-    return [[]]
+    stmt = (
+        select(Question.question_text, Choice.choice_text, Choice.votes)
+        .select_from(UserStat)
+        .join(Choice, UserStat.choice_id == Choice.id)
+        .join(Question, Choice.question_id == Question.id)
+    )
+    result = session.execute(stmt)
+    out = []
+    for row in result:
+        out.append(row)
+    return out
 
 
 @decorator_add_session
@@ -126,32 +143,46 @@ def get_personal_stat(telegram_id: int, session: Session) -> list[list]:
     """
     получить личную статистику пользователя
     """
-    return [[]]
+    stmt = (
+        select(Question.question_text, Choice.choice_text)
+        .select_from(UserStat)
+        .where(UserStat.tg_user_id == telegram_id)
+        .join(Choice, UserStat.choice_id == Choice.id)
+        .join(Question, Choice.question_id == Question.id)
+    )
+    result = session.execute(stmt)
+    out = []
+    for row in result:
+        out.append(row)
+    return out
 
 
 @decorator_add_session
-def get_random_question(telegram_id: int, session: Session):
+def get_random_question(telegram_id: int, session: Session) -> tuple:
     """
     получить случайный, неотвеченный вопрос из бд
 
     return: tuple
     """
-    available_ids = set()
-    answered_ids = set()
-    text = ""
-    id_ = -1
-    with session.begin():
-        stmt = select(Question.id).where(1==1)
-        for id_ in session.scalars(stmt):
-            available_ids.add(id_)
-        stmt = select(UserStat).where(UserStat.tg_user_id == telegram_id)
-        for id_ in session.scalars(stmt):
-            answered_ids.add(id_)
-        id_ = list(available_ids - answered_ids)[0]
-        stmt = select(Question.question_text).where(Question.id == id_)
-        for txt in session.scalars(stmt):
-            text = txt
-    return (id_, text)
+    stmt = (
+        select(Question.id, Question.question_text)
+        .select_from(Question)
+        .where(
+            Question.id.notin_(
+                select(UserStat.question_id)
+                .where(UserStat.tg_user_id == telegram_id)
+                .where(UserStat.question_id == Question.id)
+            )
+        )
+        .order_by(func.random())
+        .limit(1)
+    )
+
+    question = session.execute(stmt).first()
+    if question is None:
+        return (-1, "")
+
+    return (question.id, question.question_text)
 
 
 @decorator_add_session
@@ -159,42 +190,40 @@ def get_choices_by_question_id(question_id: int, session: Session) -> list[str]:
     """
     получить ответы по заданному question_id
     """
-    choice_text = []
-    with session.begin():
-        stmt = select(Choice).where(Choice.question_id == question_id)
-        for choice in session.scalars(stmt):
-            choice_text.append(choice.choice_text)
-    return choice_text
+    return [
+        (choice.id, choice.choice_text)
+        for choice in session.scalars(
+            select(Choice.id, Choice.choice_text)
+            .where(Choice.question_id == question_id)
+            .order_by(Choice.id)
+        )
+    ]
 
 
 @decorator_add_session
-def add_user_vote_db(choice_id: int, telegram_id: int, session: Session):
+def add_user_vote_db(question_id: int, choice_id: int, telegram_id: int, session: Session):
     """
     добавить голос пользователя выбранному варианту ответа
     """
     with session.begin():
-        stmt = select(Choice).where(Choice.id == choice_id)
-        result = session.execute(stmt)
-        votes = 0
-        for choice in result.scalars():
-            print(choice)
-            votes = choice.votes
-
-        new_votes = votes + 1
         stmt = (
             update(Choice).
             where(Choice.id == choice_id).
-            values(votes=new_votes)
+            values(votes=Choice.votes+1)
         )
-        print(stmt, new_votes, choice_id)
         session.execute(stmt)
+
+        user_stat = UserStat(question_id=question_id, choice_id=choice_id, tg_user_id=telegram_id)
+        session.add(user_stat)
         session.commit()
 
 
-
 if __name__ == "__main__":
-    print(get_random_question(1))
-    print(get_choices_by_question_id(1))
+    # print(get_all_stat())
+    # print(get_personal_stat(369937974))
+    print(get_random_question(369937974))
+    # print(get_choices_by_question_id(1))
     # create_tables_in_db()
     # add_question_to_db("test-question", datetime.now())
     # add_choice_to_db("test-choice", 20)
+    # add_user_vote_db(3, 369937974)
