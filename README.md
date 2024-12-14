@@ -9,7 +9,8 @@
 https://drive.google.com/file/d/1G-PdXM3rPblIAMtCyS07vOCAZmY9UIuk/view?usp=sharing
 
 ### Видео-консультация
-https://drive.google.com/file/d/16IvpuCA83OaoslwgDKduQdGZrrHnT3U8/view?usp=sharing
+- https://drive.google.com/file/d/16IvpuCA83OaoslwgDKduQdGZrrHnT3U8/view?usp=sharing
+- https://drive.google.com/file/d/1SLL-BE_cBijmctpad31IfW5fOJo2okSG/view?usp=sharing
 
 ## Финальный проект: Телеграм-бот для доступа к данным студентов через Google Sheets
 
